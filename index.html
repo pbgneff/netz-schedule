@@ -11,19 +11,13 @@
   <div class="max-w-2xl mx-auto">
     <h1 class="text-3xl font-bold mb-6" dir="rtl">לוח זמנים לתפילה</h1>
 
-    <div class="flex flex-col gap-2 mb-6">
-      <label for="netz" class="text-lg font-medium" dir="rtl">זמן נץ:</label>
+    <div class="flex gap-2 mb-6">
       <input type="time" id="netz" value="05:43:36" step="1"
         class="w-40 px-2 py-1 border border-gray-300 rounded text-left" style="direction: ltr; text-align: left;" />
+      <label for="netz" class="text-lg font-medium" dir="rtl">זמן נץ:</label>
     </div>
 
     <table class="w-full text-right border border-collapse border-gray-300">
-      <thead>
-        <tr class="bg-gray-100">
-          <th class="border border-gray-300 px-3 py-2" dir="rtl">שלב</th>
-          <th class="border border-gray-300 px-3 py-2">שעה</th>
-        </tr>
-      </thead>
       <tbody id="schedule" class="bg-white divide-y divide-gray-200"></tbody>
     </table>
   </div>
@@ -65,7 +59,7 @@
         const minutes = String(time.getMinutes()).padStart(2, "0");
         const seconds = String(time.getSeconds()).padStart(2, "0");
         const timeStr = `${hours}:${minutes}:${seconds}`;
-        const row = `<tr><td class="px-3 py-2" dir="rtl">${label}</td><td class="px-3 py-2">${timeStr}</td></tr>`;
+        const row = `<tr><td class="px-3 py-2">${timeStr}</td><td class="px-3 py-2" dir="rtl">${label}</td></tr>`;
         tbody.innerHTML += row;
       });
     }
