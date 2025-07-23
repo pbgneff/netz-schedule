@@ -1,43 +1,32 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="he">
+
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>לוח זמנים לתפילה</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      padding: 2rem;
-      direction: rtl;
-      background: #fdfdfd;
-    }
-    table {
-      border-collapse: collapse;
-      margin-top: 1rem;
-      width: 100%;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 0.5rem;
-      text-align: right;
-    }
-    input {
-      font-size: 1rem;
-      margin-top: 1rem;
-    }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h1>לוח זמנים לתפילה</h1>
 
-  <label for="netz">זמן נץ:</label>
-  <input type="time" id="netz" value="05:43:36" step="1">
+<body class="bg-white text-gray-900 p-6 font-sans">
+  <div class="max-w-2xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6" dir="rtl">לוח זמנים לתפילה</h1>
 
-  <table id="schedule">
-    <thead>
-      <tr><th>שלב</th><th>שעה</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <div class="flex flex-col gap-2 mb-6">
+      <label for="netz" class="text-lg font-medium" dir="rtl">זמן נץ:</label>
+      <input type="time" id="netz" value="05:43:36" step="1"
+        class="w-40 px-2 py-1 border border-gray-300 rounded text-left" style="direction: ltr; text-align: left;" />
+    </div>
+
+    <table class="w-full text-right border border-collapse border-gray-300">
+      <thead>
+        <tr class="bg-gray-100">
+          <th class="border border-gray-300 px-3 py-2" dir="rtl">שלב</th>
+          <th class="border border-gray-300 px-3 py-2">שעה</th>
+        </tr>
+      </thead>
+      <tbody id="schedule" class="bg-white divide-y divide-gray-200"></tbody>
+    </table>
+  </div>
 
   <!-- Hidden video for iOS wake lock -->
   <video id="wakelock-video" muted playsinline loop style="display:none">
@@ -69,14 +58,14 @@
         schedule.unshift({ label: segment.label, time: new Date(current) });
       }
 
-      const tbody = document.querySelector("#schedule tbody");
+      const tbody = document.getElementById("schedule");
       tbody.innerHTML = "";
       schedule.forEach(({ label, time }) => {
-        const hours = time.getHours();
+        const hours = time.getHours(); // no leading zero
         const minutes = String(time.getMinutes()).padStart(2, "0");
         const seconds = String(time.getSeconds()).padStart(2, "0");
         const timeStr = `${hours}:${minutes}:${seconds}`;
-        const row = `<tr><td>${label}</td><td>${timeStr}</td></tr>`;
+        const row = `<tr><td class="px-3 py-2" dir="rtl">${label}</td><td class="px-3 py-2">${timeStr}</td></tr>`;
         tbody.innerHTML += row;
       });
     }
@@ -103,12 +92,10 @@
       });
     }
 
-    // Setup
     window.addEventListener("load", () => {
       generateSchedule();
 
-      const netzInput = document.getElementById("netz");
-      netzInput.addEventListener("input", generateSchedule);
+      document.getElementById("netz").addEventListener("input", generateSchedule);
 
       if ("wakeLock" in navigator) {
         requestWakeLock();
@@ -118,9 +105,10 @@
           }
         });
       } else {
-        startIosWakeLock(); // fallback for iOS
+        startIosWakeLock();
       }
     });
   </script>
 </body>
+
 </html>
