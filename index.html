@@ -3,21 +3,28 @@
 
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>לוח זמנים לתפילה</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/imask"></script>
 </head>
 
-<body class="bg-white text-gray-900 p-6 font-sans">
-  <div class="max-w-2xl mx-auto">
-    <h1 class="text-3xl font-bold mb-6" dir="rtl">לוח זמנים לתפילה</h1>
+<body class="bg-white text-gray-900 font-sans p-4">
+  <div class="max-w-md mx-auto space-y-4">
+    <!-- Title -->
+    <h1 class="text-2xl font-bold text-right" dir="rtl">לוח זמנים לתפילה</h1>
 
-    <div class="flex gap-2 mb-6 justify-end">
-      <input type="time" id="netz" value="05:43:36" step="1"
-        class="w-40 px-2 py-1 border border-gray-300 rounded text-left" style="direction: ltr; text-align: left;" />
-      <label for="netz" class="text-lg font-medium" dir="rtl">זמן נץ:</label>
+    <!-- Time input and label inline -->
+    <div class="flex items-center justify-end gap-2">
+
+      <input type="text" id="netz" value="05:43:36"
+        class="w-32 text-left px-3 py-2 border border-gray-300 rounded-md text-base tracking-widest"
+        style="direction: ltr;" inputmode="numeric" />
+      <label for="netz" class="text-sm font-medium" dir="rtl">זמן נץ:</label>
     </div>
 
-    <table class="w-full text-right border border-collapse border-gray-300">
+    <!-- Schedule table -->
+    <table class="w-full border border-collapse border-gray-300 text-sm">
       <tbody id="schedule" class="bg-white divide-y divide-gray-200"></tbody>
     </table>
   </div>
@@ -34,17 +41,27 @@
       { label: "שמע", offset: 140 },
       { label: "ברכו", offset: 120 },
       { label: "ישתבח", offset: 60 },
-      { label: "פסוקי דזמרה", offset: 540 },
+      { label: "פסוקי דזמרה", offset: 480 }, // 8 minutes
       { label: "ברכות", offset: 360 },
     ];
 
-    function generateSchedule() {
-      const netzInput = document.getElementById("netz").value;
-      if (!netzInput) return;
+    function parseTimeString(str) {
+      const parts = str.split(":").map(Number);
+      if (parts.length < 2 || parts.some(isNaN)) return null;
+      return {
+        hours: parts[0],
+        minutes: parts[1],
+        seconds: parts[2] || 0,
+      };
+    }
 
-      const [h, m, s] = netzInput.split(":").map(Number);
+    function generateSchedule() {
+      const input = document.getElementById("netz").value;
+      const time = parseTimeString(input);
+      if (!time) return;
+
       let current = new Date();
-      current.setHours(h, m, s || 0, 0);
+      current.setHours(time.hours, time.minutes, time.seconds, 0);
 
       const schedule = [{ label: "נץ החמה", time: new Date(current) }];
       for (const segment of segments) {
@@ -55,16 +72,20 @@
       const tbody = document.getElementById("schedule");
       tbody.innerHTML = "";
       schedule.forEach(({ label, time }) => {
-        const hours = time.getHours(); // no leading zero
-        const minutes = String(time.getMinutes()).padStart(2, "0");
-        const seconds = String(time.getSeconds()).padStart(2, "0");
-        const timeStr = `${hours}:${minutes}:${seconds}`;
-        const row = `<tr><td class="px-3 py-2">${timeStr}</td><td class="px-3 py-2" dir="rtl">${label}</td></tr>`;
-        tbody.innerHTML += row;
+        const h = time.getHours();
+        const m = String(time.getMinutes()).padStart(2, "0");
+        const s = String(time.getSeconds()).padStart(2, "0");
+        const display = `${h}:${m}:${s}`;
+        tbody.innerHTML += `
+          <tr>
+            <td class="px-3 py-1 text-right">${display}</td>
+            <td class="px-3 py-1 text-right font-medium" dir="rtl">${label}</td>
+          </tr>
+        `;
       });
     }
 
-    // Wake Lock API for Android/modern browsers
+    // Wake Lock API
     let wakeLock = null;
     async function requestWakeLock() {
       try {
@@ -78,7 +99,6 @@
       }
     }
 
-    // iOS Safari workaround: silent video
     function startIosWakeLock() {
       const video = document.getElementById("wakelock-video");
       video.play().catch(err => {
@@ -86,10 +106,22 @@
       });
     }
 
+    // Initialize
     window.addEventListener("load", () => {
-      generateSchedule();
+      // Apply input mask using imask
+      const netzInput = document.getElementById("netz");
+      IMask(netzInput, {
+        mask: "HH:MM:SS",
+        blocks: {
+          HH: { mask: IMask.MaskedRange, from: 0, to: 23, maxLength: 2 },
+          MM: { mask: IMask.MaskedRange, from: 0, to: 59, maxLength: 2 },
+          SS: { mask: IMask.MaskedRange, from: 0, to: 59, maxLength: 2 },
+        },
+        lazy: false
+      });
 
-      document.getElementById("netz").addEventListener("input", generateSchedule);
+      netzInput.addEventListener("input", generateSchedule);
+      generateSchedule();
 
       if ("wakeLock" in navigator) {
         requestWakeLock();
